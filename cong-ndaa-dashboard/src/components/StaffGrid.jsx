@@ -49,7 +49,7 @@ export default function StaffGrid({ requests, selectedRequest, setSelectedReques
                             <th style={{ padding: '0.5rem' }}>PROPOSAL TITLE</th>
                             <th style={{ padding: '0.5rem' }}>FUNDING AMT</th>
                             <th style={{ padding: '0.5rem' }}>OFFSET / COMPLIANCE</th>
-                            <th style={{ padding: '0.5rem' }}>WAR FIGHTER SERVICE</th>
+                            <th style={{ padding: '0.5rem', textAlign: 'center' }}>WAR FIGHTER SERVICE</th>
                             <th style={{ padding: '0.5rem', textAlign: 'center' }}>PRIORITY</th>
                         </tr>
                     </thead>
@@ -109,19 +109,19 @@ export default function StaffGrid({ requests, selectedRequest, setSelectedReques
                                     </td>
 
                                     {/* WAR FIGHTER SERVICE COLUMN */}
-                                    <td style={{ padding: '0.5rem', fontWeight: 'bold', fontSize: '0.8rem' }}>
-                                        {req.warfighterService ? (
+                                    <td style={{ padding: '0.5rem', fontWeight: 'bold', fontSize: '0.8rem', textAlign: 'center' }}>
+                                        {req.warfighterService && req.warfighterService !== 'Joint / Unknown' ? (
                                             <span style={{
                                                 color: req.warfighterService.includes('Space Force') ? '#d8b4fe' :
                                                     req.warfighterService.includes('Marines') ? '#fca5a5' :
                                                         req.warfighterService.includes('Air Force') ? '#93c5fd' :
                                                             req.warfighterService.includes('Navy') ? '#bfdbfe' :
-                                                                req.warfighterService.includes('Army') ? '#86efac' : 'var(--text-muted)'
+                                                                req.warfighterService.includes('Army') ? '#86efac' : '#d8b4fe'
                                             }}>
                                                 {req.warfighterService.toUpperCase()}
                                             </span>
                                         ) : (
-                                            <span style={{ color: 'var(--text-muted)' }}>JOINT / UNKNOWN</span>
+                                            <span style={{ color: '#d8b4fe' }}>JOINT</span>
                                         )}
                                     </td>
 
