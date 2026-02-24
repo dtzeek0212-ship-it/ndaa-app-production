@@ -92,7 +92,9 @@ export default function StaffGrid({ requests, selectedRequest, setSelectedReques
                                         {req.isDrl ? <span style={{ color: 'var(--btn-yellow-border)' }}>Y</span> : null}
                                     </td>
                                     <td style={{ padding: '0.5rem', fontWeight: '600' }}>{req.companyName.substring(0, 20)}{req.companyName.length > 20 ? '...' : ''}</td>
-                                    <td style={{ padding: '0.5rem' }}>{req.briefSummary ? req.briefSummary.substring(0, 30) + '...' : req.programElement.substring(0, 30)}</td>
+                                    <td style={{ padding: '0.5rem', whiteSpace: 'normal', maxWidth: '350px', lineHeight: '1.4' }}>
+                                        {req.briefSummary ? req.briefSummary : req.programElement}
+                                    </td>
                                     <td style={{ padding: '0.5rem', fontFamily: 'var(--font-header)', fontSize: '1rem' }}>{req.formattedAmount}</td>
 
                                     {/* OFFSET VALIDATOR COLUMN */}

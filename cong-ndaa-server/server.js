@@ -297,9 +297,23 @@ function extractHeuristics(text, originalFilename) {
 
     // Intelligent summary grabbing (Maps to Proposed Title)
     let briefSummary = "Pending Title Extraction...";
-    const descMatch = text.match(/(?:Proposal Summary|Project Overview|Project Title|Proposal Title|Program Name|Project Name)[\s\n:]+([A-Za-z0-9][^\n]+)/i);
+
+    // Capture a large chunk of text after the heading to reliably grab a few sentences
+    const descMatch = text.match(/(?:Proposal Summary|Project Overview|Project Title|Proposal Title|Program Name|Project Name)[\s\n:]+([\s\S]{50,1000})/i);
     if (descMatch && descMatch[1].trim() !== "") {
-        briefSummary = descMatch[1].trim();
+        let extractedBlock = descMatch[1].trim();
+
+        // Match up to 3 sentences using common punctuation. 
+        // [^.!?]+ matches non-punctuation, [.!?]+ matches the punctuation, (?:\s|$) checks for trailing space or end
+        const sentences = extractedBlock.match(/[^.!?]+[.!?]+(?:\s|$)/g);
+
+        if (sentences && sentences.length > 0) {
+            // Take the first 3 sentences, join them, and collapse any line breaks/extra spaces
+            briefSummary = sentences.slice(0, 3).join('').replace(/\s+/g, ' ').trim();
+        } else {
+            // Fallback if no clean punctuation is found
+            briefSummary = extractedBlock.substring(0, 200).replace(/\s+/g, ' ').trim() + "...";
+        }
     }
 
     // Default company name to the filename (without truncating abruptly if the regex fails)
