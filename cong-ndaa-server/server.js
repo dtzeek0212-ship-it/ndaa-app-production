@@ -322,9 +322,14 @@ function extractHeuristics(text, originalFilename) {
     let companyName = originalFilename.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
 
     // Explicitly grab "Requesting Organization" or similar permutations, handling newline jumps
-    const orgMatch = text.match(/(?:Requesting Organization|Organization Name|Name of Organization|Entity Name|Requesting Entity|Company Name|Organization)[\s\n:]+([A-Za-z0-9][^\n]+)/i);
+    // We require a colon after "Organization" to prevent grabbing generic sentences, and split at common next-fields.
+    const orgMatch = text.match(/(?:Requesting Organization|Organization Name|Name of Organization|Entity Name|Requesting Entity|Company Name|Organization\s*:)[\s\n:]+([A-Za-z0-9][^\n]+)/i);
     if (orgMatch && orgMatch[1].trim() !== "") {
-        companyName = orgMatch[1].trim();
+        let extractedName = orgMatch[1].trim();
+        // Sometimes PDF extraction groups fields without newlines. Clean up known trailing fields:
+        extractedName = extractedName.split(/(?:Proposal|Project|Program|Dates|Amount|FY\s*20)/i)[0].trim();
+        // Remove trailing or leading brackets/quotes from bad form fills
+        companyName = extractedName.replace(/[\[\]"“”]/g, '').trim();
     }
 
     // Impact logic
