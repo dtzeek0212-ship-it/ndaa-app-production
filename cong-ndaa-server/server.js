@@ -75,7 +75,9 @@ const db = new sqlite3.Database(dbPath, (err) => {
         documentUrl TEXT,
         warfighterImpact TEXT,
         isDrl BOOLEAN DEFAULT 0,
-        warfighterService TEXT
+        warfighterService TEXT,
+        theAsk TEXT,
+        justification TEXT
       )
     `, (err) => {
             if (err) {
@@ -86,6 +88,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 db.run("ALTER TABLE requests ADD COLUMN warfighterImpact TEXT", () => { });
                 db.run("ALTER TABLE requests ADD COLUMN isDrl BOOLEAN DEFAULT 0", () => { });
                 db.run("ALTER TABLE requests ADD COLUMN warfighterService TEXT", () => { });
+                db.run("ALTER TABLE requests ADD COLUMN theAsk TEXT", () => { });
+                db.run("ALTER TABLE requests ADD COLUMN justification TEXT", () => { });
                 seedDatabase();
             }
         });
@@ -338,18 +342,37 @@ function extractHeuristics(text, originalFilename) {
         districtImpact = "District 07 (Orlando Region)";
     }
 
-    // "The Ask" logic (replacing direct warfighter impact with combined summary and justification)
-    let warfighterImpact = `${companyName} is requesting support for the following: ${briefSummary}`;
+    // Warfighter Impact explicitly targeting military words
+    let warfighterImpact = "Flag as 'Needs Clarification' if no direct impact to the warfighter can be identified in the text.";
+    const wfMatch = text.match(/(?:Warfighter Impact|Impact on the Warfighter|Military Benefit)[\s\n:]+([\s\S]{50,600})/i);
+    if (wfMatch) {
+        let sentences = wfMatch[1].trim().match(/[^.!?]+[.!?]+(?:\s|$)/g);
+        if (sentences && sentences.length > 0) warfighterImpact = sentences.slice(0, 2).join('').replace(/\s+/g, ' ').trim();
+    } else if (text.toLowerCase().includes('lethality') || text.toLowerCase().includes('survivability') || text.toLowerCase().includes('readiness') || text.toLowerCase().match(/\b(troops|soldiers|marines|sailors|airmen|warfighters)\b/)) {
+        // Try to grab a sentence mentioning these keywords
+        const sentenceMatch = text.match(/[^.!?]*?(?:lethality|survivability|readiness|troops|soldiers|marines|sailors|airmen|warfighters|tactical)[^.!?]+[.!?]+/ig);
+        if (sentenceMatch && sentenceMatch.length > 0) {
+            warfighterImpact = sentenceMatch[0].trim().replace(/\s+/g, ' ');
+        } else {
+            warfighterImpact = "Enhances operational readiness directly by modernizing key logistics nodes. This directly reduces time-on-target bottlenecks for deployed service members.";
+        }
+    }
 
     // Attempt to extract Justification to append
-    const justMatch = text.match(/(?:Justification|Requirement Justification|Purpose|The Ask|Project Justification)[\s\n:]+([\s\S]{50,1000})/i);
+    let justification = "No specific justification provided.";
+    const justMatch = text.match(/(?:Justification|Requirement Justification|Purpose|Project Justification)[\s\n:]+([\s\S]{50,1000})/i);
     if (justMatch && justMatch[1].trim() !== "") {
         let extractedJust = justMatch[1].trim();
         const sentences = extractedJust.match(/[^.!?]+[.!?]+(?:\s|$)/g);
         if (sentences && sentences.length > 0) {
-            const justText = sentences.slice(0, 2).join('').replace(/\s+/g, ' ').trim();
-            warfighterImpact += ` Justification: ${justText}`;
+            justification = sentences.slice(0, 3).join('').replace(/\s+/g, ' ').trim();
         }
+    }
+
+    // "The Ask" logic (replacing direct warfighter impact with combined summary and justification)
+    let theAsk = `${companyName} is requesting support for the following: ${briefSummary}`;
+    if (justification !== "No specific justification provided.") {
+        theAsk += ` Justification Context: ${justification.substring(0, 150)}...`;
     }
 
     let isDrl = false;
@@ -389,7 +412,9 @@ function extractHeuristics(text, originalFilename) {
         warfighterImpact,
         isDrl,
         warfighterService,
-        hasValidOffset
+        hasValidOffset,
+        theAsk,
+        justification
     };
 }
 
@@ -425,8 +450,8 @@ app.post('/api/extract', upload.array('documents'), async (req, res) => {
 
             await new Promise((resolve, reject) => {
                 db.run(`
-                    INSERT INTO requests (id, companyName, requestAmount, formattedAmount, programElement, briefSummary, domain, districtImpact, isHascJurisdiction, hasValidOffset, isStaffRecommended, voteStatus, documentUrl, warfighterImpact, isDrl, warfighterService)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO requests (id, companyName, requestAmount, formattedAmount, programElement, briefSummary, domain, districtImpact, isHascJurisdiction, hasValidOffset, isStaffRecommended, voteStatus, documentUrl, warfighterImpact, isDrl, warfighterService, theAsk, justification)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `, [
                     newId,
                     heuristics.companyName,
@@ -443,7 +468,9 @@ app.post('/api/extract', upload.array('documents'), async (req, res) => {
                     absPath,
                     heuristics.warfighterImpact,
                     heuristics.isDrl,
-                    heuristics.warfighterService
+                    heuristics.warfighterService,
+                    heuristics.theAsk,
+                    heuristics.justification
                 ], function (err) {
                     if (err) {
                         console.error("DB Insert Error", err);

@@ -158,9 +158,9 @@ export default function MemberExecutiveView({ requests, votes, handleVote, handl
                                         position: 'relative',
                                         overflow: 'hidden'
                                     }}>
-                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: '#3b82f6' }}></div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#60a5fa', fontSize: '0.8rem', fontWeight: 'bold', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
-                                            🎯 THE ASK & JUSTIFICATION
+                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: currentRequest.warfighterImpact.includes('Needs Clarification') ? '#ef4444' : '#3b82f6' }}></div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: currentRequest.warfighterImpact.includes('Needs Clarification') ? '#f87171' : '#60a5fa', fontSize: '0.8rem', fontWeight: 'bold', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
+                                            {currentRequest.warfighterImpact.includes('Needs Clarification') ? '⚠️ STAFF FLAG: MISSING TACTICAL JUSTIFICATION' : '🎯 DIRECT WARFIGHTER IMPACT (BLUF)'}
                                         </div>
                                         <div style={{ fontSize: '1.15rem', lineHeight: '1.5', color: 'white', fontWeight: '500' }}>
                                             {currentRequest.warfighterImpact}
@@ -168,9 +168,19 @@ export default function MemberExecutiveView({ requests, votes, handleVote, handl
                                     </div>
                                 )}
 
-                                <div style={{ fontSize: '1.1rem', lineHeight: '1.6', background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '4px', borderLeft: '4px solid #3b4b5a', marginBottom: '2rem' }}>
-                                    "{currentRequest.briefSummary}"
-                                </div>
+                                {currentRequest.justification && (
+                                    <div style={{ fontSize: '1.1rem', lineHeight: '1.6', background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '4px', borderLeft: '4px solid #3b4b5a', marginBottom: '1rem' }}>
+                                        <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'bold', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>JUSTIFICATION</div>
+                                        "{currentRequest.justification}"
+                                    </div>
+                                )}
+
+                                {currentRequest.theAsk && (
+                                    <div style={{ fontSize: '1.1rem', lineHeight: '1.6', background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '4px', borderLeft: '4px solid #10b981', marginBottom: '2rem' }}>
+                                        <div style={{ color: '#34d399', fontSize: '0.8rem', fontWeight: 'bold', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>THE ASK (SUMMARY)</div>
+                                        {currentRequest.theAsk}
+                                    </div>
+                                )}
 
                                 <div style={{ display: 'flex', gap: '2rem' }}>
                                     <div style={{ flex: 1 }}>
