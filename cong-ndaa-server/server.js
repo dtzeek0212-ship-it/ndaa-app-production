@@ -64,12 +64,17 @@ const db = new sqlite3.Database(dbPath, (err) => {
         isHascJurisdiction BOOLEAN DEFAULT 1,
         isStaffRecommended BOOLEAN DEFAULT 0,
         voteStatus TEXT DEFAULT 'pending',
-        memberPriority TEXT
+        memberPriority TEXT,
+        documentUrl TEXT,
+        warfighterImpact TEXT
       )
     `, (err) => {
             if (err) {
                 console.error('Error creating table', err.message);
             } else {
+                // Ensure new columns exist on older databases
+                db.run("ALTER TABLE requests ADD COLUMN documentUrl TEXT", () => { });
+                db.run("ALTER TABLE requests ADD COLUMN warfighterImpact TEXT", () => { });
                 seedDatabase();
             }
         });
