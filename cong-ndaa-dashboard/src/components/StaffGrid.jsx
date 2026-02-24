@@ -43,7 +43,7 @@ export default function StaffGrid({ requests, selectedRequest, setSelectedReques
                                     style={{ cursor: 'pointer' }}
                                 />
                             </th>
-                            <th style={{ padding: '0.5rem' }}>ID</th>
+                            <th style={{ padding: '0.5rem' }}>FL (Y/N)</th>
                             <th style={{ padding: '0.5rem' }}>ORGANIZATION</th>
                             <th style={{ padding: '0.5rem' }}>PROPOSAL TITLE</th>
                             <th style={{ padding: '0.5rem' }}>FUNDING AMT</th>
@@ -80,7 +80,13 @@ export default function StaffGrid({ requests, selectedRequest, setSelectedReques
                                             style={{ cursor: 'pointer' }}
                                         />
                                     </td>
-                                    <td style={{ padding: '0.5rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>{req.id.split('-')[1]}</td>
+                                    <td style={{ padding: '0.5rem', textAlign: 'center', fontWeight: 'bold' }}>
+                                        {req.districtImpact && (req.districtImpact.includes('FL') || req.districtImpact.includes('Florida') || req.districtImpact.includes('Tampa') || req.districtImpact.includes('Orlando') || req.districtImpact.includes('Miami')) ? (
+                                            <span style={{ color: 'var(--btn-green-border)' }}>YES</span>
+                                        ) : (
+                                            <span style={{ color: 'var(--text-muted)' }}>NO</span>
+                                        )}
+                                    </td>
                                     <td style={{ padding: '0.5rem', fontWeight: '600' }}>{req.companyName.substring(0, 20)}{req.companyName.length > 20 ? '...' : ''}</td>
                                     <td style={{ padding: '0.5rem' }}>{req.briefSummary ? req.briefSummary.substring(0, 30) + '...' : req.programElement.substring(0, 30)}</td>
                                     <td style={{ padding: '0.5rem', fontFamily: 'var(--font-header)', fontSize: '1rem' }}>{req.formattedAmount}</td>

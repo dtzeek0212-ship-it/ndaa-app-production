@@ -293,15 +293,20 @@ function extractHeuristics(text, originalFilename) {
         }
     }
 
-    // Naive summary grabbing
+    // Naive summary grabbing (Maps to Proposed Title)
     let briefSummary = text.substring(0, 500) + "...";
-    const descMatch = text.match(/(?:Description|Project Overview|Summary)[:\n]\s*(.{100,500})/i);
-    if (descMatch) {
-        briefSummary = descMatch[1].trim() + "...";
+    const descMatch = text.match(/(?:Proposal Summary|Description|Project Overview|Project Title)[:\s\n]*([^\n]+)/i);
+    if (descMatch && descMatch[1].trim() !== "") {
+        briefSummary = descMatch[1].trim();
     }
 
     // Default company name to filename
     let companyName = originalFilename.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ').substring(0, 30);
+    // Explicitly grab "Requesting Organization"
+    const orgMatch = text.match(/(?:Requesting Organization|Organization)[:\s\n]*([^\n]+)/i);
+    if (orgMatch && orgMatch[1].trim() !== "") {
+        companyName = orgMatch[1].trim().substring(0, 100);
+    }
 
     // Impact logic
     let districtImpact = "Statewide Florida Consideration";
