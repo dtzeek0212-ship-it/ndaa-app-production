@@ -49,15 +49,13 @@ export default function StaffGrid({ requests, selectedRequest, setSelectedReques
                             <th style={{ padding: '0.5rem' }}>PROPOSAL TITLE</th>
                             <th style={{ padding: '0.5rem' }}>FUNDING AMT</th>
                             <th style={{ padding: '0.5rem' }}>OFFSET / COMPLIANCE</th>
-                            <th style={{ padding: '0.5rem' }}>JURISDICTION</th>
+                            <th style={{ padding: '0.5rem' }}>WAR FIGHTER SERVICE</th>
                             <th style={{ padding: '0.5rem', textAlign: 'center' }}>PRIORITY</th>
                         </tr>
                     </thead>
                     <tbody>
                         {requests.map(req => {
                             const isSelected = selectedRequest && selectedRequest.id === req.id;
-                            // Mock logic for Jurisdictional Flagging based on domain
-                            const isHasc = req.domain !== 'VA' && req.domain !== 'Intel';
 
                             return (
                                 <tr
@@ -110,12 +108,20 @@ export default function StaffGrid({ requests, selectedRequest, setSelectedReques
                                         )}
                                     </td>
 
-                                    {/* JURISDICTIONAL FLAGGING COLUMN */}
-                                    <td style={{ padding: '0.5rem' }}>
-                                        {isHasc ? (
-                                            <span style={{ color: 'var(--text-muted)' }}>HASC</span>
+                                    {/* WAR FIGHTER SERVICE COLUMN */}
+                                    <td style={{ padding: '0.5rem', fontWeight: 'bold', fontSize: '0.8rem' }}>
+                                        {req.warfighterService ? (
+                                            <span style={{
+                                                color: req.warfighterService.includes('Space Force') ? '#d8b4fe' :
+                                                    req.warfighterService.includes('Marines') ? '#fca5a5' :
+                                                        req.warfighterService.includes('Air Force') ? '#93c5fd' :
+                                                            req.warfighterService.includes('Navy') ? '#bfdbfe' :
+                                                                req.warfighterService.includes('Army') ? '#86efac' : 'var(--text-muted)'
+                                            }}>
+                                                {req.warfighterService.toUpperCase()}
+                                            </span>
                                         ) : (
-                                            <span style={{ color: 'var(--btn-red-border)', fontWeight: 'bold' }}>{req.domain.toUpperCase()} (OUT OF SCOPE)</span>
+                                            <span style={{ color: 'var(--text-muted)' }}>JOINT / UNKNOWN</span>
                                         )}
                                     </td>
 

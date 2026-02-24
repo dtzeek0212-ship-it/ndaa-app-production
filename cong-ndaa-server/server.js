@@ -74,7 +74,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
         memberPriority TEXT,
         documentUrl TEXT,
         warfighterImpact TEXT,
-        isDrl BOOLEAN DEFAULT 0
+        isDrl BOOLEAN DEFAULT 0,
+        warfighterService TEXT
       )
     `, (err) => {
             if (err) {
@@ -84,6 +85,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 db.run("ALTER TABLE requests ADD COLUMN documentUrl TEXT", () => { });
                 db.run("ALTER TABLE requests ADD COLUMN warfighterImpact TEXT", () => { });
                 db.run("ALTER TABLE requests ADD COLUMN isDrl BOOLEAN DEFAULT 0", () => { });
+                db.run("ALTER TABLE requests ADD COLUMN warfighterService TEXT", () => { });
                 seedDatabase();
             }
         });
@@ -341,6 +343,16 @@ function extractHeuristics(text, originalFilename) {
         isDrl = true;
     }
 
+    // Warfighter Service Extraction
+    let services = [];
+    if (text.match(/\bArmy\b/i)) services.push("Army");
+    if (text.match(/\bNavy\b/i)) services.push("Navy");
+    if (text.match(/\bMarines|Marine Corps\b/i)) services.push("Marines");
+    if (text.match(/\bAir Force\b/i)) services.push("Air Force");
+    if (text.match(/\bSpace Force\b/i)) services.push("Space Force");
+
+    let warfighterService = services.length > 0 ? services.join(", ") : "Joint / Unknown";
+
     return {
         companyName,
         requestAmount: isDrl && !amount ? 0 : (amount || 5000000),
@@ -350,7 +362,8 @@ function extractHeuristics(text, originalFilename) {
         domain: "HASC",
         districtImpact,
         warfighterImpact,
-        isDrl
+        isDrl,
+        warfighterService
     };
 }
 
@@ -386,8 +399,8 @@ app.post('/api/extract', upload.array('documents'), async (req, res) => {
 
             await new Promise((resolve, reject) => {
                 db.run(`
-                    INSERT INTO requests (id, companyName, requestAmount, formattedAmount, programElement, briefSummary, domain, districtImpact, isHascJurisdiction, hasValidOffset, isStaffRecommended, voteStatus, documentUrl, warfighterImpact, isDrl)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO requests (id, companyName, requestAmount, formattedAmount, programElement, briefSummary, domain, districtImpact, isHascJurisdiction, hasValidOffset, isStaffRecommended, voteStatus, documentUrl, warfighterImpact, isDrl, warfighterService)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `, [
                     newId,
                     heuristics.companyName,
@@ -403,7 +416,8 @@ app.post('/api/extract', upload.array('documents'), async (req, res) => {
                     'pending',
                     absPath,
                     heuristics.warfighterImpact,
-                    heuristics.isDrl
+                    heuristics.isDrl,
+                    heuristics.warfighterService
                 ], function (err) {
                     if (err) {
                         console.error("DB Insert Error", err);
