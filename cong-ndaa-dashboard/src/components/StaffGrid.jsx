@@ -80,7 +80,7 @@ export default function StaffGrid({ requests, selectedRequest, setSelectedReques
                                         />
                                     </td>
                                     <td style={{ padding: '0.5rem', textAlign: 'center', fontWeight: 'bold' }}>
-                                        {req.districtImpact && (req.districtImpact.includes('FL') || req.districtImpact.includes('Florida') || req.districtImpact.includes('Tampa') || req.districtImpact.includes('Orlando') || req.districtImpact.includes('Miami')) ? (
+                                        {req.isFlBased ? (
                                             <span style={{ color: 'var(--btn-green-border)' }}>YES</span>
                                         ) : (
                                             <span style={{ color: 'var(--text-muted)' }}>NO</span>

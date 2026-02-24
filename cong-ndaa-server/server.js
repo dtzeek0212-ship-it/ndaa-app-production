@@ -77,7 +77,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
         isDrl BOOLEAN DEFAULT 0,
         warfighterService TEXT,
         theAsk TEXT,
-        justification TEXT
+        justification TEXT,
+        isFlBased BOOLEAN DEFAULT 0
       )
     `, (err) => {
             if (err) {
@@ -90,6 +91,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 db.run("ALTER TABLE requests ADD COLUMN warfighterService TEXT", () => { });
                 db.run("ALTER TABLE requests ADD COLUMN theAsk TEXT", () => { });
                 db.run("ALTER TABLE requests ADD COLUMN justification TEXT", () => { });
+                db.run("ALTER TABLE requests ADD COLUMN isFlBased BOOLEAN DEFAULT 0", () => { });
                 seedDatabase();
             }
         });
@@ -336,11 +338,15 @@ function extractHeuristics(text, originalFilename) {
         companyName = extractedName.replace(/[\[\]"“”]/g, '').trim();
     }
 
-    // Impact logic
-    let districtImpact = "Statewide Florida Consideration";
-    if (text.toLowerCase().includes('orlando') || text.toLowerCase().includes('district 7') || text.toLowerCase().includes('fl-07')) {
-        districtImpact = "District 07 (Orlando Region)";
+    // Strict Florida Based Extraction tracking literal Yes/No answers
+    let isFlBased = false;
+    const flMatch = text.match(/(?:Florida based\s*\(Y\/N\)\??|Florida Based)[\s\n:]*([YyNn](?:es|o)?)\b/i);
+    if (flMatch && flMatch[1].toLowerCase().startsWith('y')) {
+        isFlBased = true;
     }
+
+    // Impact logic
+    let districtImpact = "Statewide Consideration";
 
     // Warfighter Impact explicitly targeting military words
     let warfighterImpact = "Flag as 'Needs Clarification' if no direct impact to the warfighter can be identified in the text.";
@@ -414,7 +420,8 @@ function extractHeuristics(text, originalFilename) {
         warfighterService,
         hasValidOffset,
         theAsk,
-        justification
+        justification,
+        isFlBased
     };
 }
 
@@ -450,8 +457,8 @@ app.post('/api/extract', upload.array('documents'), async (req, res) => {
 
             await new Promise((resolve, reject) => {
                 db.run(`
-                    INSERT INTO requests (id, companyName, requestAmount, formattedAmount, programElement, briefSummary, domain, districtImpact, isHascJurisdiction, hasValidOffset, isStaffRecommended, voteStatus, documentUrl, warfighterImpact, isDrl, warfighterService, theAsk, justification)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO requests (id, companyName, requestAmount, formattedAmount, programElement, briefSummary, domain, districtImpact, isHascJurisdiction, hasValidOffset, isStaffRecommended, voteStatus, documentUrl, warfighterImpact, isDrl, warfighterService, theAsk, justification, isFlBased)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `, [
                     newId,
                     heuristics.companyName,
@@ -470,7 +477,8 @@ app.post('/api/extract', upload.array('documents'), async (req, res) => {
                     heuristics.isDrl,
                     heuristics.warfighterService,
                     heuristics.theAsk,
-                    heuristics.justification
+                    heuristics.justification,
+                    heuristics.isFlBased
                 ], function (err) {
                     if (err) {
                         console.error("DB Insert Error", err);
