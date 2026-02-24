@@ -7,8 +7,25 @@ export default function Login({ setRole }) {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            color: 'var(--text-main)'
+            color: 'var(--text-main)',
+            position: 'relative'
         }}>
+            <div style={{
+                position: 'absolute',
+                top: '5%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontFamily: '"Great Vibes", cursive',
+                fontSize: '5rem',
+                color: 'rgba(255, 255, 255, 0.15)',
+                textShadow: '0 0 20px rgba(96, 165, 250, 0.3)',
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap',
+                userSelect: 'none'
+            }}>
+                We the People...
+            </div>
+
             <div className="glass-panel" style={{ padding: '3rem', width: '400px', display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center', background: 'rgba(13, 20, 27, 0.6)', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <img className="seal-img" src="/house_seal.png" alt="House Seal" style={{ width: '100px', height: '100px', marginBottom: '1rem' }} />
 
