@@ -78,7 +78,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
         warfighterService TEXT,
         theAsk TEXT,
         justification TEXT,
-        isFlBased BOOLEAN DEFAULT 0
+        isFlBased BOOLEAN DEFAULT 0,
+        warfighterFunctions TEXT
       )
     `, (err) => {
             if (err) {
@@ -92,6 +93,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 db.run("ALTER TABLE requests ADD COLUMN theAsk TEXT", () => { });
                 db.run("ALTER TABLE requests ADD COLUMN justification TEXT", () => { });
                 db.run("ALTER TABLE requests ADD COLUMN isFlBased BOOLEAN DEFAULT 0", () => { });
+                db.run("ALTER TABLE requests ADD COLUMN warfighterFunctions TEXT", () => { });
                 seedDatabase();
             }
         });
@@ -403,6 +405,17 @@ function extractHeuristics(text, originalFilename) {
 
     let warfighterService = services.length > 0 ? services.join(", ") : "Joint / Unknown";
 
+    // Warfighting Functions keyword analysis
+    const wff = {
+        'Sustainment': (text.match(/\bsustainment|logistics|supply chain|maintenance|transportation\b/gi) || []).length,
+        'Maneuver': (text.match(/\bmaneuver|mobility|navigate\b/gi) || []).length,
+        'Protection': (text.match(/\bprotection|armor|defense|survivability\b/gi) || []).length,
+        'Intelligence': (text.match(/\bintelligence|ISR|reconnaissance|surveillance|sensor\b/gi) || []).length,
+        'Mission Command': (text.match(/\bmission command|C2|communications|C4ISR|network\b/gi) || []).length,
+        'Fires': (text.match(/\bfires|strike|lethality|artillery|missile|munitions\b/gi) || []).length
+    };
+    const warfighterFunctions = JSON.stringify(wff);
+
     // Offset Amount Verification
     let hasValidOffset = false;
     const offsetMatch = text.match(/(?:Offset Amount|Line 13 Offset|Line 13|13\.?\s*Offset|Offset)[\s\n:]*([A-Za-z0-9\$\.\,-]+)/i);
@@ -428,7 +441,8 @@ function extractHeuristics(text, originalFilename) {
         hasValidOffset,
         theAsk,
         justification,
-        isFlBased
+        isFlBased,
+        warfighterFunctions
     };
 }
 
@@ -464,8 +478,8 @@ app.post('/api/extract', upload.array('documents'), async (req, res) => {
 
             await new Promise((resolve, reject) => {
                 db.run(`
-                    INSERT INTO requests (id, companyName, requestAmount, formattedAmount, programElement, briefSummary, domain, districtImpact, isHascJurisdiction, hasValidOffset, isStaffRecommended, voteStatus, documentUrl, warfighterImpact, isDrl, warfighterService, theAsk, justification, isFlBased)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO requests (id, companyName, requestAmount, formattedAmount, programElement, briefSummary, domain, districtImpact, isHascJurisdiction, hasValidOffset, isStaffRecommended, voteStatus, documentUrl, warfighterImpact, isDrl, warfighterService, theAsk, justification, isFlBased, warfighterFunctions)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `, [
                     newId,
                     heuristics.companyName,
@@ -485,7 +499,8 @@ app.post('/api/extract', upload.array('documents'), async (req, res) => {
                     heuristics.warfighterService,
                     heuristics.theAsk,
                     heuristics.justification,
-                    heuristics.isFlBased
+                    heuristics.isFlBased,
+                    heuristics.warfighterFunctions
                 ], function (err) {
                     if (err) {
                         console.error("DB Insert Error", err);

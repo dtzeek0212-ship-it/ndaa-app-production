@@ -36,41 +36,7 @@ export default function MemberExecutiveView({ requests, votes, handleVote, handl
     const pendingRecommendedCount = pendingRequests.filter(req => req.isStaffRecommended).length;
     const vetoRiskCount = pendingRequests.filter(req => !req.hasValidOffset).length;
 
-    // Calculate dynamic portfolio balance based on Warfighter Services for Approved Requests
-    const serviceMentions = useMemo(() => {
-        const counts = {
-            'Army': { count: 0, color: '#86efac' },
-            'Navy': { count: 0, color: '#bfdbfe' },
-            'Marines': { count: 0, color: '#fca5a5' },
-            'Air Force': { count: 0, color: '#93c5fd' },
-            'Space Force': { count: 0, color: '#d8b4fe' },
-            'Joint': { count: 0, color: '#a78bfa' }
-        };
-        let total = 0;
 
-        approvedRequests.forEach(req => {
-            if (req.warfighterService) {
-                if (req.warfighterService.includes('Army')) { counts['Army'].count++; total++; }
-                if (req.warfighterService.includes('Navy')) { counts['Navy'].count++; total++; }
-                if (req.warfighterService.includes('Marines')) { counts['Marines'].count++; total++; }
-                if (req.warfighterService.includes('Air Force')) { counts['Air Force'].count++; total++; }
-                if (req.warfighterService.includes('Space Force')) { counts['Space Force'].count++; total++; }
-                if (req.warfighterService.includes('Unknown') || req.warfighterService === 'Joint') { counts['Joint'].count++; total++; }
-            } else {
-                counts['Joint'].count++; total++;
-            }
-        });
-
-        // Convert to array of objects with percentages, sorted by percentage descending
-        return Object.keys(counts)
-            .map(key => ({
-                label: key,
-                color: counts[key].color,
-                percent: total === 0 ? 0 : Math.round((counts[key].count / total) * 100)
-            }))
-            .filter(item => item.percent > 0) // Only show ones that have some share
-            .sort((a, b) => b.percent - a.percent);
-    }, [approvedRequests]);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1.5rem', padding: '1rem' }}>
@@ -284,22 +250,44 @@ export default function MemberExecutiveView({ requests, votes, handleVote, handl
                 <div style={{ width: '350px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
                     <div className="glass-panel" style={{ flex: 1 }}>
-                        <div className="panel-title">PORTFOLIO BALANCE</div>
+                        <div className="panel-title">WARFIGHTING FUNCTIONS</div>
                         <div style={{ padding: '1rem', color: 'var(--text-muted)' }}>
-                            <div style={{ marginBottom: '1rem', fontSize: '0.8rem' }}>CURRENT APPROVED MIX (WARFIGHTER SERVICES)</div>
+                            <div style={{ marginBottom: '1rem', fontSize: '0.8rem' }}>REQUEST STRATEGIC ALIGNMENT</div>
 
-                            {serviceMentions.length > 0 ? serviceMentions.map((service) => (
-                                <React.Fragment key={service.label}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                        <span>{service.label}</span>
-                                        <span style={{ color: 'white' }}>{service.percent}%</span>
-                                    </div>
-                                    <div style={{ height: '8px', background: 'rgba(255,255,255,0.1)', marginBottom: '1rem' }}>
-                                        <div style={{ width: `${service.percent}%`, height: '100%', background: service.color, transition: 'width 0.5s ease' }}></div>
-                                    </div>
-                                </React.Fragment>
-                            )) : (
-                                <div style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.3)', padding: '1rem 0' }}>No approvals yet to calculate portfolio balance.</div>
+                            {currentRequest && currentRequest.warfighterFunctions ? (() => {
+                                let wffData;
+                                try {
+                                    wffData = JSON.parse(currentRequest.warfighterFunctions);
+                                } catch {
+                                    wffData = { 'Sustainment': 0, 'Maneuver': 0, 'Protection': 0, 'Intelligence': 0, 'Mission Command': 0, 'Fires': 0 };
+                                }
+                                const maxCount = Math.max(...Object.values(wffData), 1);
+
+                                const colorMap = {
+                                    'Sustainment': '#fbbf24',
+                                    'Maneuver': '#34d399',
+                                    'Protection': '#60a5fa',
+                                    'Intelligence': '#f472b6',
+                                    'Mission Command': '#818cf8',
+                                    'Fires': '#ef4444'
+                                };
+
+                                return Object.entries(wffData).sort((a, b) => b[1] - a[1]).map(([label, count]) => {
+                                    const percent = Math.round((count / maxCount) * 100);
+                                    return (
+                                        <React.Fragment key={label}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem', fontSize: '0.85rem' }}>
+                                                <span>{label.toUpperCase()}</span>
+                                                <span style={{ color: 'white' }}>{count > 0 ? `${count} INDICATORS` : '0'}</span>
+                                            </div>
+                                            <div style={{ height: '8px', background: 'rgba(255,255,255,0.1)', marginBottom: '1rem', borderRadius: '4px', overflow: 'hidden' }}>
+                                                <div style={{ width: `${percent}%`, height: '100%', background: colorMap[label], transition: 'width 0.5s ease' }}></div>
+                                            </div>
+                                        </React.Fragment>
+                                    );
+                                });
+                            })() : (
+                                <div style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.3)', padding: '1rem 0' }}>No functional alignment data available.</div>
                             )}
                         </div>
                     </div>
