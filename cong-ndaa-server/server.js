@@ -366,12 +366,19 @@ function extractHeuristics(text, originalFilename) {
 
     // Attempt to extract Justification to append
     let justification = "No specific justification provided.";
-    const justMatch = text.match(/(?:Justification|Requirement Justification|Purpose|Project Justification)[\s\n:]+([\s\S]{50,1000})/i);
+    const justMatch = text.match(/(?:Justification|Requirement Justification|Purpose|Project Justification)[\s\n:]+([\s\S]{50,800})/i);
     if (justMatch && justMatch[1].trim() !== "") {
         let extractedJust = justMatch[1].trim();
+        // Prevent bleeding into the next field by splitting at likely next headers
+        extractedJust = extractedJust.split(/(?:Project Name|Proposal|Impact|Dates|Amount|Florida based|Program Element|Line 13)/i)[0].trim();
+
         const sentences = extractedJust.match(/[^.!?]+[.!?]+(?:\s|$)/g);
         if (sentences && sentences.length > 0) {
-            justification = sentences.slice(0, 3).join('').replace(/\s+/g, ' ').trim();
+            // Strictly limit to 2 sentences to keep it brief
+            justification = sentences.slice(0, 2).join('').replace(/\s+/g, ' ').trim();
+        } else if (extractedJust.length > 10) {
+            // Fallback if no clean punctuation is found
+            justification = extractedJust.substring(0, 150).replace(/\s+/g, ' ').trim() + "...";
         }
     }
 
