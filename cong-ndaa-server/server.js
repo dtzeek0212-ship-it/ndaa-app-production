@@ -73,7 +73,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
         voteStatus TEXT DEFAULT 'pending',
         memberPriority TEXT,
         documentUrl TEXT,
-        warfighterImpact TEXT
+        warfighterImpact TEXT,
+        isDrl BOOLEAN DEFAULT 0
       )
     `, (err) => {
             if (err) {
@@ -82,6 +83,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 // Ensure new columns exist on older databases
                 db.run("ALTER TABLE requests ADD COLUMN documentUrl TEXT", () => { });
                 db.run("ALTER TABLE requests ADD COLUMN warfighterImpact TEXT", () => { });
+                db.run("ALTER TABLE requests ADD COLUMN isDrl BOOLEAN DEFAULT 0", () => { });
                 seedDatabase();
             }
         });
@@ -320,15 +322,21 @@ function extractHeuristics(text, originalFilename) {
         warfighterImpact = "Enhances operational readiness directly by modernizing key logistics nodes. This directly reduces time-on-target bottlenecks for deployed service members.";
     }
 
+    let isDrl = false;
+    if (text.match(/Direct Report Language|Report Language|\bDRL\b/i)) {
+        isDrl = true;
+    }
+
     return {
         companyName,
-        requestAmount: amount || 5000000,
-        formattedAmount: formattedAmount === "$0" ? "$5 MILLION" : formattedAmount,
+        requestAmount: isDrl && !amount ? 0 : (amount || 5000000),
+        formattedAmount: isDrl && !amount ? "$0" : (formattedAmount === "$0" ? "$5 MILLION" : formattedAmount),
         programElement: "Pending PE Assignment",
         briefSummary,
         domain: "HASC",
         districtImpact,
-        warfighterImpact
+        warfighterImpact,
+        isDrl
     };
 }
 
@@ -364,8 +372,8 @@ app.post('/api/extract', upload.array('documents'), async (req, res) => {
 
             await new Promise((resolve, reject) => {
                 db.run(`
-                    INSERT INTO requests (id, companyName, requestAmount, formattedAmount, programElement, briefSummary, domain, districtImpact, isHascJurisdiction, hasValidOffset, isStaffRecommended, voteStatus, documentUrl, warfighterImpact)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO requests (id, companyName, requestAmount, formattedAmount, programElement, briefSummary, domain, districtImpact, isHascJurisdiction, hasValidOffset, isStaffRecommended, voteStatus, documentUrl, warfighterImpact, isDrl)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `, [
                     newId,
                     heuristics.companyName,
@@ -380,7 +388,8 @@ app.post('/api/extract', upload.array('documents'), async (req, res) => {
                     0, // false
                     'pending',
                     absPath,
-                    heuristics.warfighterImpact
+                    heuristics.warfighterImpact,
+                    heuristics.isDrl
                 ], function (err) {
                     if (err) {
                         console.error("DB Insert Error", err);

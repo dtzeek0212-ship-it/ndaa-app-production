@@ -44,6 +44,7 @@ export default function StaffGrid({ requests, selectedRequest, setSelectedReques
                                 />
                             </th>
                             <th style={{ padding: '0.5rem' }}>FL (Y/N)</th>
+                            <th style={{ padding: '0.5rem' }}>DRL</th>
                             <th style={{ padding: '0.5rem' }}>ORGANIZATION</th>
                             <th style={{ padding: '0.5rem' }}>PROPOSAL TITLE</th>
                             <th style={{ padding: '0.5rem' }}>FUNDING AMT</th>
@@ -86,6 +87,9 @@ export default function StaffGrid({ requests, selectedRequest, setSelectedReques
                                         ) : (
                                             <span style={{ color: 'var(--text-muted)' }}>NO</span>
                                         )}
+                                    </td>
+                                    <td style={{ padding: '0.5rem', textAlign: 'center', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                                        {req.isDrl ? <span style={{ color: 'var(--btn-yellow-border)' }}>Y</span> : null}
                                     </td>
                                     <td style={{ padding: '0.5rem', fontWeight: '600' }}>{req.companyName.substring(0, 20)}{req.companyName.length > 20 ? '...' : ''}</td>
                                     <td style={{ padding: '0.5rem' }}>{req.briefSummary ? req.briefSummary.substring(0, 30) + '...' : req.programElement.substring(0, 30)}</td>
