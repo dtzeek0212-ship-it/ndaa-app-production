@@ -136,7 +136,14 @@ export default function MemberExecutiveView({ requests, votes, handleVote, handl
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
                                     <div>
                                         <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>NATIONAL SECURITY BLUF</div>
-                                        <div style={{ fontSize: '2rem', fontFamily: 'var(--font-header)', lineHeight: '1.1' }}>{currentRequest.companyName}</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                                            <div style={{ fontSize: '2rem', fontFamily: 'var(--font-header)', lineHeight: '1.1' }}>{currentRequest.companyName}</div>
+                                            {currentRequest.districtImpact && currentRequest.districtImpact.includes('FL') && (
+                                                <div style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid var(--btn-green-border)', color: 'var(--btn-green-border)', padding: '0.3rem 0.6rem', borderRadius: '4px', fontWeight: 'bold', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', letterSpacing: '0.05em' }}>
+                                                    🎯 FL BASED
+                                                </div>
+                                            )}
+                                        </div>
                                         <div style={{ fontSize: '1.2rem', color: 'var(--btn-green-border)', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             {currentRequest.formattedAmount} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>| {currentRequest.programElement}</span>
                                         </div>
