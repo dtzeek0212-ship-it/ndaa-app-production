@@ -338,9 +338,18 @@ function extractHeuristics(text, originalFilename) {
         districtImpact = "District 07 (Orlando Region)";
     }
 
-    let warfighterImpact = "Flag as 'Needs Clarification' if no direct impact to the warfighter can be identified in the text.";
-    if (text.toLowerCase().includes('lethality') || text.toLowerCase().includes('survivability') || text.toLowerCase().includes('readiness')) {
-        warfighterImpact = "Enhances operational readiness directly by modernizing key logistics nodes. This directly reduces time-on-target bottlenecks for deployed service members.";
+    // "The Ask" logic (replacing direct warfighter impact with combined summary and justification)
+    let warfighterImpact = `${companyName} is requesting support for the following: ${briefSummary}`;
+
+    // Attempt to extract Justification to append
+    const justMatch = text.match(/(?:Justification|Requirement Justification|Purpose|The Ask|Project Justification)[\s\n:]+([\s\S]{50,1000})/i);
+    if (justMatch && justMatch[1].trim() !== "") {
+        let extractedJust = justMatch[1].trim();
+        const sentences = extractedJust.match(/[^.!?]+[.!?]+(?:\s|$)/g);
+        if (sentences && sentences.length > 0) {
+            const justText = sentences.slice(0, 2).join('').replace(/\s+/g, ' ').trim();
+            warfighterImpact += ` Justification: ${justText}`;
+        }
     }
 
     let isDrl = false;

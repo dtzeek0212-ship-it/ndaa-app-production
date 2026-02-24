@@ -122,9 +122,9 @@ export default function MemberExecutiveView({ requests, votes, handleVote, handl
                                         position: 'relative',
                                         overflow: 'hidden'
                                     }}>
-                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: currentRequest.warfighterImpact.includes('Needs Clarification') ? '#ef4444' : '#3b82f6' }}></div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: currentRequest.warfighterImpact.includes('Needs Clarification') ? '#f87171' : '#60a5fa', fontSize: '0.8rem', fontWeight: 'bold', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
-                                            {currentRequest.warfighterImpact.includes('Needs Clarification') ? '⚠️ STAFF FLAG: MISSING TACTICAL JUSTIFICATION' : '🎯 DIRECT WARFIGHTER IMPACT (BLUF)'}
+                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: '#3b82f6' }}></div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#60a5fa', fontSize: '0.8rem', fontWeight: 'bold', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
+                                            🎯 THE ASK & JUSTIFICATION
                                         </div>
                                         <div style={{ fontSize: '1.15rem', lineHeight: '1.5', color: 'white', fontWeight: '500' }}>
                                             {currentRequest.warfighterImpact}
