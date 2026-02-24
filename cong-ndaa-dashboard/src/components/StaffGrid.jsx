@@ -97,7 +97,9 @@ export default function StaffGrid({ requests, selectedRequest, setSelectedReques
 
                                     {/* OFFSET VALIDATOR COLUMN */}
                                     <td style={{ padding: '0.5rem' }}>
-                                        {req.hasValidOffset ? (
+                                        {req.isDrl && req.requestAmount === 0 ? (
+                                            <span style={{ color: 'rgba(255,255,255,0.2)', fontStyle: 'italic', fontSize: '0.8rem' }}>N/A (LANGUAGE ONLY)</span>
+                                        ) : req.hasValidOffset ? (
                                             <span style={{ color: 'var(--btn-green-border)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                 <span style={{ fontSize: '1rem' }}>✓</span> VALID PE
                                             </span>

@@ -358,6 +358,17 @@ function extractHeuristics(text, originalFilename) {
 
     let warfighterService = services.length > 0 ? services.join(", ") : "Joint / Unknown";
 
+    // Offset Amount Verification
+    let hasValidOffset = false;
+    const offsetMatch = text.match(/(?:Offset Amount|Line 13 Offset|Line 13|13\.?\s*Offset|Offset)[\s\n:]*([A-Za-z0-9\$\.\,-]+)/i);
+    if (offsetMatch && offsetMatch[1].trim() !== "") {
+        const val = offsetMatch[1].trim().toLowerCase();
+        // Check if the offset is effectively "empty" or explicitly stated as not having an offset
+        if (!['none', 'n/a', 'na', '0', '$0', 'tbd', 'unknown', '-'].includes(val)) {
+            hasValidOffset = true;
+        }
+    }
+
     return {
         companyName,
         requestAmount: isDrl && !amount ? 0 : (amount || 5000000),
@@ -368,7 +379,8 @@ function extractHeuristics(text, originalFilename) {
         districtImpact,
         warfighterImpact,
         isDrl,
-        warfighterService
+        warfighterService,
+        hasValidOffset
     };
 }
 
@@ -416,7 +428,7 @@ app.post('/api/extract', upload.array('documents'), async (req, res) => {
                     heuristics.domain,
                     heuristics.districtImpact,
                     1, // true 
-                    0, // false
+                    heuristics.hasValidOffset,
                     0, // false
                     'pending',
                     absPath,
