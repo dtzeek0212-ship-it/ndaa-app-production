@@ -92,6 +92,30 @@ export default function StaffAnalysisPane({ selectedRequest, handleDeleteRequest
                         </label>
 
                         <div style={{ marginTop: '2rem' }}>
+                            <h4 style={{ color: 'var(--text-muted)', marginBottom: '1rem', fontSize: '0.8rem' }}>AMERICA FIRST & ETHICS VETTING</h4>
+
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', background: selectedRequest.isAmericaFirst ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255,255,255,0.02)', padding: '0.5rem', borderRadius: '4px', border: selectedRequest.isAmericaFirst ? '1px solid var(--btn-green-border)' : '1px solid transparent' }}>
+                                <input type="checkbox" checked={selectedRequest.isAmericaFirst} readOnly />
+                                <span><strong>America First Principles:</strong> Domestic manufacturing / securing supply chain.</span>
+                            </label>
+
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', background: selectedRequest.isSmallBusiness ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255,255,255,0.02)', padding: '0.5rem', borderRadius: '4px', border: selectedRequest.isSmallBusiness ? '1px solid var(--btn-green-border)' : '1px solid transparent' }}>
+                                <input type="checkbox" checked={selectedRequest.isSmallBusiness} readOnly />
+                                <span><strong>Small Business Owner:</strong> Classified as SBIR, SDVOSB, WOSB, or 8(a).</span>
+                            </label>
+
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', background: selectedRequest.fraudWasteAbuseRisk === 'Low' ? 'rgba(34, 197, 94, 0.1)' : selectedRequest.fraudWasteAbuseRisk.includes('Moderate') ? 'rgba(217, 119, 6, 0.2)' : 'rgba(239, 68, 68, 0.2)', padding: '0.5rem', borderRadius: '4px', border: selectedRequest.fraudWasteAbuseRisk === 'Low' ? '1px solid var(--btn-green-border)' : selectedRequest.fraudWasteAbuseRisk.includes('Moderate') ? '1px solid rgba(217, 119, 6, 0.5)' : '1px solid rgba(239, 68, 68, 0.5)' }}>
+                                <span style={{ fontSize: '1.2rem', minWidth: '24px' }}>{selectedRequest.fraudWasteAbuseRisk === 'Low' ? '✓' : '⚠️'}</span>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span><strong>Fraud, Waste & Abuse Scan:</strong> {selectedRequest.fraudWasteAbuseRisk}</span>
+                                    {selectedRequest.fraudWasteAbuseRisk !== 'Low' && (
+                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>AI flagged potential fluff or unnecessary expenditures. Heavy redlining recommended.</span>
+                                    )}
+                                </div>
+                            </label>
+                        </div>
+
+                        <div style={{ marginTop: '2rem' }}>
                             <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', fontSize: '0.8rem' }}>DISTRICT MULTIPLIER MAP</h4>
                             <div style={{ border: '1px solid #3b4b5a', padding: '1rem', borderRadius: '4px', background: 'rgba(0,0,0,0.5)' }}>
                                 {selectedRequest.districtImpact.includes('FL') ? (

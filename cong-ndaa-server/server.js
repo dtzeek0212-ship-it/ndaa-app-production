@@ -79,7 +79,10 @@ const db = new sqlite3.Database(dbPath, (err) => {
         theAsk TEXT,
         justification TEXT,
         isFlBased BOOLEAN DEFAULT 0,
-        warfighterFunctions TEXT
+        warfighterFunctions TEXT,
+        isSmallBusiness BOOLEAN DEFAULT 0,
+        isAmericaFirst BOOLEAN DEFAULT 0,
+        fraudWasteAbuseRisk TEXT
       )
     `, (err) => {
             if (err) {
@@ -94,6 +97,9 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 db.run("ALTER TABLE requests ADD COLUMN justification TEXT", () => { });
                 db.run("ALTER TABLE requests ADD COLUMN isFlBased BOOLEAN DEFAULT 0", () => { });
                 db.run("ALTER TABLE requests ADD COLUMN warfighterFunctions TEXT", () => { });
+                db.run("ALTER TABLE requests ADD COLUMN isSmallBusiness BOOLEAN DEFAULT 0", () => { });
+                db.run("ALTER TABLE requests ADD COLUMN isAmericaFirst BOOLEAN DEFAULT 0", () => { });
+                db.run("ALTER TABLE requests ADD COLUMN fraudWasteAbuseRisk TEXT", () => { });
                 seedDatabase();
             }
         });
@@ -427,6 +433,25 @@ function extractHeuristics(text, originalFilename) {
         }
     }
 
+    // Vetting & Analysis: America First / Small Business / Fraud
+    let isSmallBusiness = false;
+    if (text.match(/\b(Small Business|SBIR|STTR|SDVOSB|WOSB|VOSB|8\(a\)|HUBZone)\b/i)) {
+        isSmallBusiness = true;
+    }
+
+    let isAmericaFirst = false;
+    if (text.match(/\b(domestic manufacturing|made in usa|onshoring|supply chain resilience|domestic sourcing|american made|secure supply chain)\b/i)) {
+        isAmericaFirst = true;
+    }
+
+    let fraudWasteAbuseRisk = "Low";
+    const fluffCount = (text.match(/\b(synergy|paradigm|crypto|metaverse|blockchain|conceptual|non-tangible|ideation|thought leadership|disruptive)\b/gi) || []).length;
+    if (fluffCount > 3 || (amount && amount > 50000000)) {
+        fraudWasteAbuseRisk = "High (Potential Fluff / Waste)";
+    } else if (fluffCount > 0) {
+        fraudWasteAbuseRisk = "Moderate (Review Justification)";
+    }
+
     return {
         companyName,
         requestAmount: isDrl && !amount ? 0 : (amount || 5000000),
@@ -442,7 +467,10 @@ function extractHeuristics(text, originalFilename) {
         theAsk,
         justification,
         isFlBased,
-        warfighterFunctions
+        warfighterFunctions,
+        isSmallBusiness,
+        isAmericaFirst,
+        fraudWasteAbuseRisk
     };
 }
 
@@ -478,8 +506,8 @@ app.post('/api/extract', upload.array('documents'), async (req, res) => {
 
             await new Promise((resolve, reject) => {
                 db.run(`
-                    INSERT INTO requests (id, companyName, requestAmount, formattedAmount, programElement, briefSummary, domain, districtImpact, isHascJurisdiction, hasValidOffset, isStaffRecommended, voteStatus, documentUrl, warfighterImpact, isDrl, warfighterService, theAsk, justification, isFlBased, warfighterFunctions)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO requests (id, companyName, requestAmount, formattedAmount, programElement, briefSummary, domain, districtImpact, isHascJurisdiction, hasValidOffset, isStaffRecommended, voteStatus, documentUrl, warfighterImpact, isDrl, warfighterService, theAsk, justification, isFlBased, warfighterFunctions, isSmallBusiness, isAmericaFirst, fraudWasteAbuseRisk)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `, [
                     newId,
                     heuristics.companyName,
@@ -500,7 +528,10 @@ app.post('/api/extract', upload.array('documents'), async (req, res) => {
                     heuristics.theAsk,
                     heuristics.justification,
                     heuristics.isFlBased,
-                    heuristics.warfighterFunctions
+                    heuristics.warfighterFunctions,
+                    heuristics.isSmallBusiness,
+                    heuristics.isAmericaFirst,
+                    heuristics.fraudWasteAbuseRisk
                 ], function (err) {
                     if (err) {
                         console.error("DB Insert Error", err);
