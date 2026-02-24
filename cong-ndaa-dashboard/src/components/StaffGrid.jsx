@@ -86,8 +86,8 @@ export default function StaffGrid({ requests, selectedRequest, setSelectedReques
                                             <span style={{ color: 'var(--text-muted)' }}>NO</span>
                                         )}
                                     </td>
-                                    <td style={{ padding: '0.5rem', textAlign: 'center', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                                        {req.isDrl ? <span style={{ color: 'var(--btn-yellow-border)' }}>Y</span> : null}
+                                    <td style={{ padding: '0.5rem', textAlign: 'center' }}>
+                                        {req.isDrl ? <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--btn-green-border)', margin: '0 auto', boxShadow: '0 0 8px var(--btn-green-border)' }} title="Direct Report Language"></div> : null}
                                     </td>
                                     <td style={{ padding: '0.5rem', fontWeight: '600' }}>{req.companyName.substring(0, 20)}{req.companyName.length > 20 ? '...' : ''}</td>
                                     <td style={{ padding: '0.5rem', whiteSpace: 'normal', maxWidth: '350px', lineHeight: '1.4' }}>
