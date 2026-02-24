@@ -293,19 +293,20 @@ function extractHeuristics(text, originalFilename) {
         }
     }
 
-    // Naive summary grabbing (Maps to Proposed Title)
-    let briefSummary = text.substring(0, 500) + "...";
-    const descMatch = text.match(/(?:Proposal Summary|Description|Project Overview|Project Title)[:\s\n]*([^\n]+)/i);
+    // Intelligent summary grabbing (Maps to Proposed Title)
+    let briefSummary = "Pending Title Extraction...";
+    const descMatch = text.match(/(?:Proposal Summary|Project Overview|Project Title|Proposal Title|Program Name|Project Name)[\s\n:]+([A-Za-z0-9][^\n]+)/i);
     if (descMatch && descMatch[1].trim() !== "") {
         briefSummary = descMatch[1].trim();
     }
 
-    // Default company name to filename
-    let companyName = originalFilename.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ').substring(0, 30);
-    // Explicitly grab "Requesting Organization"
-    const orgMatch = text.match(/(?:Requesting Organization|Organization)[:\s\n]*([^\n]+)/i);
+    // Default company name to the filename (without truncating abruptly if the regex fails)
+    let companyName = originalFilename.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
+
+    // Explicitly grab "Requesting Organization" or similar permutations, handling newline jumps
+    const orgMatch = text.match(/(?:Requesting Organization|Organization Name|Name of Organization|Entity Name|Requesting Entity|Company Name|Organization)[\s\n:]+([A-Za-z0-9][^\n]+)/i);
     if (orgMatch && orgMatch[1].trim() !== "") {
-        companyName = orgMatch[1].trim().substring(0, 100);
+        companyName = orgMatch[1].trim();
     }
 
     // Impact logic
