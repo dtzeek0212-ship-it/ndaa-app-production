@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 
 export default function ImportModal({ onClose, onImportSuccess }) {
     const [isDragging, setIsDragging] = useState(false);
-    const [file, setFile] = useState(null);
+    const [files, setFiles] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState(null);
     const fileInputRef = useRef(null);
@@ -21,34 +21,35 @@ export default function ImportModal({ onClose, onImportSuccess }) {
         e.preventDefault();
         setIsDragging(false);
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            validateAndSetFile(e.dataTransfer.files[0]);
+            validateAndAddFiles(Array.from(e.dataTransfer.files));
         }
     };
 
     const handleFileSelect = (e) => {
         if (e.target.files && e.target.files.length > 0) {
-            validateAndSetFile(e.target.files[0]);
+            validateAndAddFiles(Array.from(e.target.files));
         }
     };
 
-    const validateAndSetFile = (selectedFile) => {
+    const validateAndAddFiles = (selectedFiles) => {
         setError(null);
         const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-        if (!validTypes.includes(selectedFile.type)) {
-            setError("Invalid file format. Please upload a PDF or DOCX file.");
-            setFile(null);
-            return;
+        const valid = selectedFiles.filter(f => validTypes.includes(f.type));
+
+        if (valid.length !== selectedFiles.length) {
+            setError("Some files were skipped. Invalid format. Only PDF and DOCX files are supported.");
         }
-        setFile(selectedFile);
+
+        setFiles(prev => [...prev, ...valid]);
     };
 
     const handleUpload = async () => {
-        if (!file) return;
+        if (files.length === 0) return;
         setUploading(true);
         setError(null);
 
         const formData = new FormData();
-        formData.append('document', file);
+        files.forEach(f => formData.append('documents', f));
 
         try {
             const response = await fetch('/api/extract', {
@@ -59,10 +60,14 @@ export default function ImportModal({ onClose, onImportSuccess }) {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to upload document.');
+                throw new Error("Failed to upload documents.");
             }
 
-            onImportSuccess(data.data); // Trigger UI refresh or notification
+            if (data.results && data.results.length > 0) {
+                onImportSuccess(data.results[0]);
+            } else {
+                throw new Error(data.errors?.[0]?.error || 'Failed to extract any files.');
+            }
             onClose();
         } catch (err) {
             console.error("Upload error:", err);
@@ -121,20 +126,23 @@ export default function ImportModal({ onClose, onImportSuccess }) {
                             ref={fileInputRef}
                             style={{ display: 'none' }}
                             accept=".pdf,.docx"
+                            multiple
                             onChange={handleFileSelect}
                         />
 
-                        {file ? (
+                        {files.length > 0 ? (
                             <>
                                 <div style={{ fontSize: '3rem' }}>📄</div>
-                                <div style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>{file.name}</div>
-                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                                <div style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>{files.length} File(s) Selected</div>
+                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', maxHeight: '60px', overflowY: 'auto' }}>
+                                    {files.map((f, i) => <div key={i}>{f.name}</div>)}
+                                </div>
                             </>
                         ) : (
                             <>
                                 <div style={{ fontSize: '3rem', color: 'var(--text-muted)' }}>📥</div>
-                                <div style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>Click to Browse or Drag & Drop</div>
-                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Supports .PDF and .DOCX formats</div>
+                                <div style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>Click to Browse or Drag & Drop Multiple</div>
+                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Supports bulk .PDF and .DOCX uploads</div>
                             </>
                         )}
                     </div>
@@ -155,7 +163,7 @@ export default function ImportModal({ onClose, onImportSuccess }) {
                         </button>
                         <button
                             onClick={handleUpload}
-                            disabled={!file || uploading}
+                            disabled={files.length === 0 || uploading}
                             style={{
                                 padding: '0.6rem 1.5rem',
                                 background: uploading ? '#3b4b5a' : 'var(--btn-yellow)',
@@ -163,8 +171,8 @@ export default function ImportModal({ onClose, onImportSuccess }) {
                                 color: 'black',
                                 fontWeight: 'bold',
                                 borderRadius: '4px',
-                                cursor: (!file || uploading) ? 'not-allowed' : 'pointer',
-                                opacity: (!file || uploading) ? 0.7 : 1,
+                                cursor: (files.length === 0 || uploading) ? 'not-allowed' : 'pointer',
+                                opacity: (files.length === 0 || uploading) ? 0.7 : 1,
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '0.5rem'

@@ -320,61 +320,72 @@ function extractHeuristics(text, originalFilename) {
 }
 
 // File Upload & Scan Endpoint
-app.post('/api/extract', upload.single('document'), async (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded.' });
+app.post('/api/extract', upload.array('documents'), async (req, res) => {
+    if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: 'No files uploaded.' });
     }
 
-    const filePath = req.file.path;
-    let extractedText = "";
+    const results = [];
+    const errors = [];
 
-    try {
-        if (req.file.mimetype === 'application/pdf') {
-            const dataBuffer = fs.readFileSync(filePath);
-            const data = await pdfParse(dataBuffer);
-            extractedText = data.text;
-        } else if (req.file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-            const result = await mammoth.extractRawText({ path: filePath });
-            extractedText = result.value;
-        } else {
-            return res.status(400).json({ error: 'Unsupported file type. Use .pdf or .docx' });
-        }
+    for (const file of req.files) {
+        const filePath = file.path;
+        let extractedText = "";
 
-        const heuristics = extractHeuristics(extractedText, req.file.originalname);
-        const newId = 'REQ-SCAN' + Math.floor(Math.random() * 100000);
-
-        const absPath = path.resolve(filePath);
-
-        db.run(`
-            INSERT INTO requests (id, companyName, requestAmount, formattedAmount, programElement, briefSummary, domain, districtImpact, isHascJurisdiction, hasValidOffset, isStaffRecommended, voteStatus, documentUrl, warfighterImpact)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
-            newId,
-            heuristics.companyName,
-            heuristics.requestAmount,
-            heuristics.formattedAmount,
-            heuristics.programElement,
-            heuristics.briefSummary,
-            heuristics.domain,
-            heuristics.districtImpact,
-            1, // true 
-            0, // false
-            0, // false
-            'pending',
-            absPath,
-            heuristics.warfighterImpact
-        ], function (err) {
-            if (err) {
-                console.error("DB Insert Error", err);
-                return res.status(500).json({ error: err.message });
+        try {
+            if (file.mimetype === 'application/pdf') {
+                const dataBuffer = fs.readFileSync(filePath);
+                const data = await pdfParse(dataBuffer);
+                extractedText = data.text;
+            } else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                const result = await mammoth.extractRawText({ path: filePath });
+                extractedText = result.value;
+            } else {
+                errors.push({ filename: file.originalname, error: 'Unsupported file type. Use .pdf or .docx' });
+                continue;
             }
-            res.json({ success: true, message: "Document scanned and imported.", id: newId, data: heuristics });
-        });
 
-    } catch (e) {
-        console.error("Extraction error", e);
-        res.status(500).json({ error: "Failed to extract and parse document: " + e.message });
+            const heuristics = extractHeuristics(extractedText, file.originalname);
+            const newId = 'REQ-SCAN' + Math.floor(Math.random() * 100000);
+            const absPath = path.resolve(filePath);
+
+            await new Promise((resolve, reject) => {
+                db.run(`
+                    INSERT INTO requests (id, companyName, requestAmount, formattedAmount, programElement, briefSummary, domain, districtImpact, isHascJurisdiction, hasValidOffset, isStaffRecommended, voteStatus, documentUrl, warfighterImpact)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `, [
+                    newId,
+                    heuristics.companyName,
+                    heuristics.requestAmount,
+                    heuristics.formattedAmount,
+                    heuristics.programElement,
+                    heuristics.briefSummary,
+                    heuristics.domain,
+                    heuristics.districtImpact,
+                    1, // true 
+                    0, // false
+                    0, // false
+                    'pending',
+                    absPath,
+                    heuristics.warfighterImpact
+                ], function (err) {
+                    if (err) {
+                        console.error("DB Insert Error", err);
+                        reject(err);
+                    } else {
+                        results.push({ id: newId, data: heuristics });
+                        resolve();
+                    }
+                });
+            });
+
+        } catch (e) {
+            console.error("Extraction error", e);
+            errors.push({ filename: file.originalname, error: e.message });
+        }
     }
+
+    res.json({ success: true, message: `Processed ${results.length} files.`, results, errors });
 });
 
 // Update vote status
