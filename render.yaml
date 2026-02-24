@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: ndaa-portal
+    env: node
+    plan: starter # Starter plan is $7/mo and supports persistent disks
+    buildCommand: npm run build
+    startCommand: npm run start
+    disk:
+      name: sqlite-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL
+        value: /data/ndaa_requests.db
+      - key: UPLOAD_DIR
+        value: /data/uploads
+      - key: NODE_ENV
+        value: production

@@ -1,0 +1,12 @@
+{
+    "name": "ndaa-portal-root",
+    "version": "1.0.0",
+    "private": true,
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "scripts": {
+        "build": "cd cong-ndaa-dashboard && npm install && npm run build && mkdir -p ../cong-ndaa-server/public && cp -r dist/* ../cong-ndaa-server/public/ && cd ../cong-ndaa-server && npm install",
+        "start": "cd cong-ndaa-server && node server.js"
+    }
+}
