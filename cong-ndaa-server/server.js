@@ -38,6 +38,13 @@ const dbPath = process.env.DATABASE_URL || path.resolve(__dirname, 'ndaa_request
 app.get('/api/document', (req, res) => {
     const docPath = req.query.path;
     if (docPath && fs.existsSync(docPath)) {
+        const ext = path.extname(docPath).toLowerCase();
+        if (ext === '.pdf') {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'inline; filename="' + path.basename(docPath) + '"');
+        } else if (ext === '.docx' || ext === '.doc') {
+            res.setHeader('Content-Disposition', 'attachment; filename="' + path.basename(docPath) + '"');
+        }
         res.sendFile(docPath);
     } else {
         res.status(404).send('Document not found');
