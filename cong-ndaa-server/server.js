@@ -342,7 +342,7 @@ function extractHeuristics(text, originalFilename) {
 
     // Strict Florida Based Extraction tracking literal Yes/No answers
     let isFlBased = false;
-    const flMatch = text.match(/(?:Florida based\s*\(Y\/N\)\??|Florida Based)[\s\n:]*([YyNn](?:es|o)?)\b/i);
+    const flMatch = text.match(/(?:Florida based|employees in Florida)[^\n:]*[:?]?\s*\n?\s*([YyNn](?:es|o)?)\b/i);
     if (flMatch && flMatch[1].toLowerCase().startsWith('y')) {
         isFlBased = true;
     }
