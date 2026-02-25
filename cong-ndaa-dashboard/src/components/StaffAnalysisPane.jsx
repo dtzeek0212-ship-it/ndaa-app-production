@@ -104,11 +104,11 @@ export default function StaffAnalysisPane({ selectedRequest, handleDeleteRequest
                                 <span><strong>Small Business Owner:</strong> Classified as SBIR, SDVOSB, WOSB, or 8(a).</span>
                             </label>
 
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', background: selectedRequest.fraudWasteAbuseRisk === 'Low' ? 'rgba(34, 197, 94, 0.1)' : selectedRequest.fraudWasteAbuseRisk.includes('Moderate') ? 'rgba(217, 119, 6, 0.2)' : 'rgba(239, 68, 68, 0.2)', padding: '0.5rem', borderRadius: '4px', border: selectedRequest.fraudWasteAbuseRisk === 'Low' ? '1px solid var(--btn-green-border)' : selectedRequest.fraudWasteAbuseRisk.includes('Moderate') ? '1px solid rgba(217, 119, 6, 0.5)' : '1px solid rgba(239, 68, 68, 0.5)' }}>
-                                <span style={{ fontSize: '1.2rem', minWidth: '24px' }}>{selectedRequest.fraudWasteAbuseRisk === 'Low' ? '✓' : '⚠️'}</span>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', background: (selectedRequest.fraudWasteAbuseRisk || 'Low') === 'Low' ? 'rgba(34, 197, 94, 0.1)' : (selectedRequest.fraudWasteAbuseRisk || 'Low').includes('Moderate') ? 'rgba(217, 119, 6, 0.2)' : 'rgba(239, 68, 68, 0.2)', padding: '0.5rem', borderRadius: '4px', border: (selectedRequest.fraudWasteAbuseRisk || 'Low') === 'Low' ? '1px solid var(--btn-green-border)' : (selectedRequest.fraudWasteAbuseRisk || 'Low').includes('Moderate') ? '1px solid rgba(217, 119, 6, 0.5)' : '1px solid rgba(239, 68, 68, 0.5)' }}>
+                                <span style={{ fontSize: '1.2rem', minWidth: '24px' }}>{(selectedRequest.fraudWasteAbuseRisk || 'Low') === 'Low' ? '✓' : '⚠️'}</span>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span><strong>Fraud, Waste & Abuse Scan:</strong> {selectedRequest.fraudWasteAbuseRisk}</span>
-                                    {selectedRequest.fraudWasteAbuseRisk !== 'Low' && (
+                                    <span><strong>Fraud, Waste & Abuse Scan:</strong> {selectedRequest.fraudWasteAbuseRisk || 'Low'}</span>
+                                    {(selectedRequest.fraudWasteAbuseRisk || 'Low') !== 'Low' && (
                                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>AI flagged potential fluff or unnecessary expenditures. Heavy redlining recommended.</span>
                                     )}
                                 </div>
